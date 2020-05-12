@@ -2186,6 +2186,8 @@ namespace DaySim.Framework.Core {
     [XmlAttribute]
     public int COMPASS_MinimumAutoDrivingAge { get; set; } = 18;
 
+    [XmlAttribute]
+    public double COMPASS_AutoParkAndRideLotCapacitySizeWeight { get; set; } = 1;
 
     [XmlAttribute]
     public int COMPASS_MaximumTerminalsToSearchWalk { get; set; } = 10;
@@ -2264,6 +2266,9 @@ namespace DaySim.Framework.Core {
     public double COMPASS_PercentSharedCarTripsByMainPassenger_Shopping { get; set; } = 0.73;
     [XmlAttribute]
     public double COMPASS_PercentSharedCarTripsByMainPassenger_Social { get; set; } = 0.62;
+
+    [XmlAttribute]
+    public int OriginZoneToPrintFromOMXSkims { get; set; }
 
 
     public enum NodeDistanceReaderTypes { TextOrBinary, HDF5 };
