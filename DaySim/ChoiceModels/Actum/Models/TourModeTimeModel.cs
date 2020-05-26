@@ -218,9 +218,10 @@ namespace DaySim.ChoiceModels.Actum.Models {
       int constrainedMode = Global.Configuration.IncludeMixedModesInModeChoiceLogsums ? 0 : -1;
       int constrainedArrivalTime = (Global.Configuration.ConstrainTimesForModeChoiceLogsums) ? tour.DestinationArrivalTime : 0;
       int constrainedDepartureTime = (Global.Configuration.ConstrainTimesForModeChoiceLogsums) ? tour.DestinationDepartureTime : 0;
+      bool skipParkingChoice = !(Global.Configuration.ShouldUseDestinatonParkingForModeChoiceLogsums);
 
       tour.DestinationParcel = destinationParcel;
-      HTourModeTime.SetModeTimeImpedances(householdDay, tour, constrainedMode, constrainedArrivalTime, constrainedDepartureTime, householdCars, transitDiscountFraction);
+      HTourModeTime.SetModeTimeImpedances(householdDay, tour, constrainedMode, constrainedArrivalTime, constrainedDepartureTime, householdCars, transitDiscountFraction,skipParkingChoice);
 
       RunModel(choiceProbabilityCalculator, householdDay, tour, destinationParcel, householdCars, constrainedMode, constrainedArrivalTime, constrainedDepartureTime);
 
@@ -303,8 +304,7 @@ namespace DaySim.ChoiceModels.Actum.Models {
       int trnpassflag = (person.TransitPassOwnership > 0).ToFlag();
       int parkwrkmissflag = (person.PaidParkingAtWorkplace < 0).ToFlag();
 
-
-
+      int detailedDestParkingData = destinationParcel.ParkingDataAvailable;
 
       int PTpass = person.TransitPassOwnership;
 
@@ -636,6 +636,8 @@ namespace DaySim.ChoiceModels.Actum.Models {
           //modeComponent.AddUtilityTerm(58, carsLessThanWorkersFlag);
           modeComponent.AddUtilityTerm(601, parkwrkflag * workTourFlag);
           modeComponent.AddUtilityTerm(602, parkwrkmissflag * workTourFlag);
+          modeComponent.AddUtilityTerm(661, detailedDestParkingData);
+
 
         } else if (mode == Global.Settings.Modes.HovDriver) {
           modeComponent.AddUtilityTerm(40, 1);
@@ -658,6 +660,7 @@ namespace DaySim.ChoiceModels.Actum.Models {
           modeComponent.AddUtilityTerm(603, parkwrkflag * workTourFlag);
           modeComponent.AddUtilityTerm(604, parkwrkmissflag * workTourFlag);
           modeComponent.AddUtilityTerm(607, hhsizeone);
+          modeComponent.AddUtilityTerm(662, detailedDestParkingData);
 
 
 
@@ -697,6 +700,7 @@ namespace DaySim.ChoiceModels.Actum.Models {
           modeComponent.AddUtilityTerm(136, homeBasedTourFlag * socialTourFlag);
           modeComponent.AddUtilityTerm(137, workBasedTourFlag);
           modeComponent.AddUtilityTerm(138, jointTourFlag);
+          modeComponent.AddUtilityTerm(663, detailedDestParkingData);
           modeComponent.AddUtilityTerm(907, retiredAdultFlag);
           //modeComponent.AddUtilityTerm(908, childUnder5Flag * jointTourFlag);
           //modeComponent.AddUtilityTerm(30, 1);
@@ -975,6 +979,13 @@ namespace DaySim.ChoiceModels.Actum.Models {
           double gentime = modeTimes.GeneralizedTimeToDestination + modeTimes.GeneralizedTimeFromDestination;
           
           double distance = modeTimes.PathDistanceToDestination + modeTimes.PathDistanceFromDestination;
+
+          // try separate parking cost parameters for inside and outside detailed parking area - this is additive, alteady included in gentime
+          if (mode == Global.Settings.Modes.Sov || mode == Global.Settings.Modes.HovDriver || mode == Global.Settings.Modes.HovPassenger) {
+            double parkCost = modeTimes.DestinationAccessCost;
+            alternative.AddUtilityTerm(664, parkCost * detailedDestParkingData);
+            alternative.AddUtilityTerm(665, parkCost * (1-detailedDestParkingData));
+          }
 
           // Expand generalised time by purpose
 
