@@ -190,6 +190,12 @@ namespace DaySim.ChoiceModels.Actum.Models {
         double distanceLog = Math.Log(1 + distanceFromOrigin);
         double distanceFromSchool = person.IsFullOrPartTimeWorker ? 0 : person.UsualSchoolParcel.DistanceFromSchoolLog(destinationParcel, 1);
 
+        //JB: 20201127
+        double piecewiseDistanceFrom0To5Km = Math.Min(distanceFromOrigin, .50);
+        double piecewiseDistanceFrom5To10Km = Math.Max(0, Math.Min(distanceFromOrigin - .5, 1 - .5));
+        double piecewiseDistanceFrom10To20Km = Math.Max(0, Math.Min(distanceFromOrigin - 1, 2 - 1));
+        double piecewiseDistanceFrom20To40Km = Math.Max(0, Math.Min(distanceFromOrigin - 2, 4 - 2));
+        double piecewiseDistanceFrom40KmToInfinity = Math.Max(0, distanceFromOrigin - 4);
 
         // parcel buffers
         double educationBuffer = Math.Log(destinationParcel.EmploymentEducationBuffer2 + 1);
@@ -231,6 +237,13 @@ namespace DaySim.ChoiceModels.Actum.Models {
         if (destinationParcel.LandUseCode == 101 || destinationParcel.LandUseCode == 147) {
           workLocationIsInCPHcity = true;
         }
+
+        //JB: 20201127  
+        bool residenceIsInCPHcity = false;
+        if (residenceParcel.LandUseCode == 101 || residenceParcel.LandUseCode == 147) {
+          residenceIsInCPHcity = true;
+        }
+
 
         //GV: 13. mar. 2019 - no. of parkig places in the residental area
         double destNoParking = (
@@ -329,6 +342,17 @@ namespace DaySim.ChoiceModels.Actum.Models {
         alternative.AddUtilityTerm(29, person.Age * workTourLogsum);
 
         // Distance
+
+        //JB: 20201127 added distance term for CPH calibration
+        alternative.AddUtilityTerm(34, residenceIsInCPHcity.ToFlag() * distanceFromOrigin);
+
+        //JB: 20201127 added piecewise linear distance terms for calibration
+        alternative.AddUtilityTerm(35, piecewiseDistanceFrom0To5Km);
+        alternative.AddUtilityTerm(36, piecewiseDistanceFrom5To10Km);
+        alternative.AddUtilityTerm(37, piecewiseDistanceFrom10To20Km);
+        alternative.AddUtilityTerm(38, piecewiseDistanceFrom20To40Km);
+        alternative.AddUtilityTerm(39, piecewiseDistanceFrom40KmToInfinity);
+
         alternative.AddUtilityTerm(40, distanceLog);  // base distance term
         alternative.AddUtilityTerm(41, (lowIncome).ToFlag() * distanceLog);
         alternative.AddUtilityTerm(42, (lowMediumIncome).ToFlag() * distanceLog);

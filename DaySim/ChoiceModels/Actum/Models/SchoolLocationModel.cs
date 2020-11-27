@@ -163,6 +163,12 @@ namespace DaySim.ChoiceModels.Actum.Models {
         double distanceUni_2 = Math.Max(0, Math.Min(distanceFromOrigin - 2, 5 - 2));
         double distanceUni_3 = Math.Max(0, distanceFromOrigin - 5);
 
+        //JB: 20201127
+        double piecewiseDistanceFrom0To5Km = Math.Min(distanceFromOrigin, .50);
+        double piecewiseDistanceFrom5To10Km = Math.Max(0, Math.Min(distanceFromOrigin - .5, 1 - .5));
+        double piecewiseDistanceFrom10To20Km = Math.Max(0, Math.Min(distanceFromOrigin - 1, 2 - 1));
+        double piecewiseDistanceFrom20KmToInfinity = Math.Max(0, distanceFromOrigin - 2);
+
         double distanceLog = Math.Log(1 + distanceFromOrigin);
         double distanceFromWork = person.IsFullOrPartTimeWorker ? person.UsualWorkParcel.DistanceFromWorkLog(destinationParcel, 1) : 0;
         //                var millionsSquareFeet = destinationZoneTotals.MillionsSquareFeet();
@@ -235,6 +241,13 @@ namespace DaySim.ChoiceModels.Actum.Models {
 
         //20191212 JLB  add calibration coefficient for distance
         alternative.AddUtilityTerm(96, distanceLog);
+
+        //JB: 20201127 added piecewise linear distance terms for calibration
+        alternative.AddUtilityTerm(91, piecewiseDistanceFrom0To5Km);
+        alternative.AddUtilityTerm(92, piecewiseDistanceFrom5To10Km);
+        alternative.AddUtilityTerm(93, piecewiseDistanceFrom10To20Km);
+        alternative.AddUtilityTerm(94, piecewiseDistanceFrom20KmToInfinity);
+
 
         alternative.AddUtilityTerm(24, isAge0to5.ToFlag() * aggregateLogsum);
         alternative.AddUtilityTerm(25, isPrimaryStudent.ToFlag() * aggregateLogsum);
